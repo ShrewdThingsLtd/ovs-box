@@ -108,12 +108,11 @@ ovs_restart() {
 
 ovs_run() {
 
+	exec_tgt "/" "modprobe openvswitch"
 	ovs_wipeout
 	ovs_mount_hugepages
 	ovsdb_server_start
 	ovs_restart
 }
-
-exec_tgt "/" "modprobe openvswitch"
 
 set +x
