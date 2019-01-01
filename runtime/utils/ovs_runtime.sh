@@ -29,61 +29,61 @@ ovs_cmd() {
 
 ovs_clear_br() {
 
-        local br_inst=$1
+	local br_inst=$1
 
-        echo ".........................."
-        echo "Deleting OF flows"
-        ovs-ofctl del-flows ${br_inst}
-        ports_list=$(ovs_cmd list-ports ${br_inst})
-        for port_inst in ${ports_list}; do
-                echo "............................"
-                echo "Removing port from bridge:  [${br_inst}]-X   X/${port_inst}/"
-                pci_addr=$(ovs_cmd get Interface ${port_inst} options:dpdk-devargs)
-                ovs_cmd del-port ${port_inst}
-                if [[ "${pci_addr}" != "" ]]
-                then
-                        echo "........................................."
-                        echo "Detaching PCI (possible benign error):   [${br_inst}]-X   X${pci_addr}"
-                        echo ${pci_addr} | xargs ovs-appctl netdev-dpdk/detach
-                fi
-        done
+	echo ".........................."
+	echo "Deleting OF flows"
+	ovs-ofctl del-flows ${br_inst}
+	ports_list=$(ovs_cmd list-ports ${br_inst})
+	for port_inst in ${ports_list}; do
+		echo "............................"
+		echo "Removing port from bridge:  [${br_inst}]-X   X/${port_inst}/"
+		pci_addr=$(ovs_cmd get Interface ${port_inst} options:dpdk-devargs)
+		ovs_cmd del-port ${port_inst}
+		if [[ "${pci_addr}" != "" ]]
+			then
+			echo "........................................."
+			echo "Detaching PCI (possible benign error):   [${br_inst}]-X   X${pci_addr}"
+			echo ${pci_addr} | xargs ovs-appctl netdev-dpdk/detach
+		fi
+	done
 }
 
-ovs_delete_br() {
+ovs_dpdk_del_br() {
 
-        local br_inst=$1
+	local br_inst=$1
 
-        if [[ -z ${br_inst} ]]
-        then
-                local br_list=$(ovs_cmd list-br)
-                for br_inst in ${br_list}; do
-                        ovs_clear_br ${br_inst}
-                done
-                echo ".........................."
-                echo "Deleting QoS"
-                ovs_cmd -- --all destroy QoS -- --all destroy Queue
-                echo ".........................."
-                echo "Deleting bridges:         $(echo ${br_list})"
-                for br_inst in ${br_list}; do
+	if [[ -z ${br_inst} ]]
+	then
+		local br_list=$(ovs_cmd list-br)
+		for br_inst in ${br_list}; do
+			ovs_clear_br ${br_inst}
+		done
+		echo ".........................."
+		echo "Deleting QoS"
+		ovs_cmd -- --all destroy QoS -- --all destroy Queue
+		echo ".........................."
+		echo "Deleting bridges:         $(echo ${br_list})"
+		for br_inst in ${br_list}; do
 			ovs_cmd del-br ${br_inst}
 			ip link delete ${br_inst}
-                done
-                echo "========================================================================="
-                echo "DONE CLEARING OVS"
-                echo "========================================================================="
-                echo "========================================================================="
-                echo
-                rm -f $(pwd)/.ovs_ulog.log
-        else
-                ovs_clear_br ${br_inst}
+		done
+		echo "========================================================================="
+		echo "DONE CLEARING OVS"
+		echo "========================================================================="
+		echo "========================================================================="
+		echo
+		rm -f $(pwd)/.ovs_ulog.log
+	else
+		ovs_clear_br ${br_inst}
 		ovs_cmd del-br ${br_inst}
 		ip link delete ${br_inst}
-        fi
+	fi
 }
 
 ovs_wipeout() {
 
-	ovs_delete_br
+	ovs_dpdk_del_br
 	ovs-ctl stop
 	ovsdb_reset
 }
