@@ -106,6 +106,16 @@ ovs_restart() {
 	ovs-ctl status
 }
 
+ovs_vsctl_remote_create() {
+
+printf '
+#!/bin/bash\n
+docker exec %s ovs-vsctl $@\n' \
+        ${DOCKER_INST} \
+        > /usr/local/bin/ovs-vsctl-remote.sh
+chmod +x /usr/local/bin/ovs-vsctl-remote.sh
+}
+
 ovs_run() {
 
 	exec_tgt "/" "modprobe openvswitch"
@@ -113,6 +123,7 @@ ovs_run() {
 	ovs_mount_hugepages
 	ovsdb_server_start
 	ovs_restart
+	ovs_vsctl_remote_create
 }
 
 set +x
