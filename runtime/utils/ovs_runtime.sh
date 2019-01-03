@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+set +x
 
 ovs_mount_hugepages() {
 
@@ -118,6 +118,7 @@ chmod +x /usr/local/bin/ovs-vsctl-remote.sh
 
 ovs_run() {
 
+	dpdk_remote_install
 	exec_tgt "/" "modprobe openvswitch"
 	ovs_wipeout
 	ovs_mount_hugepages

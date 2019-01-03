@@ -22,7 +22,7 @@ ovs_dpdk_add_dummy_port() {
 ovs_dpdk_docker() {
 
         echo "ovs_dpdk_docker"
-        set -x
+        set +x
         local remote_dir="/"
 ##################
 local ovs_docker_cmd="/tmp/${DOCKER_INST}/ovs-docker $@"
