@@ -1,0 +1,22 @@
+{
+	"type": "object",
+	"options": {
+		"disable_edit_json": true,
+		"disable_properties": true,
+		"collapsed": true
+	},
+	"properties": {
+		"OVS Version": {
+			"type": "string",
+			"default": "v2.10.1"
+		},
+		"OVS Managegement Threads Mask": {
+			"type": "string",
+			"default": "0x00c0"
+		},
+		"OVS PMD Threads Mask": {
+			"type": "string",
+			"default": "0x003c"
+		}
+	}
+}
