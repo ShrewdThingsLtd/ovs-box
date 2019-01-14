@@ -4,7 +4,7 @@ ovs_dpdk_add_br() {
 
 	local ovs_br=$1
 	
-	exec_log "ovs-vsctl add-br ${ovs_br} -- set bridge ${ovs_br} datapath_type=netdev"
+	exec_log "ovs_cmd add-br ${ovs_br} -- set bridge ${ovs_br} datapath_type=netdev"
 }
 
 ovs_dpdk_add_dummy_port() {
@@ -16,14 +16,14 @@ ovs_dpdk_add_dummy_port() {
 	ip link delete ${port_name} type dummy
 	ip link add ${port_name} type dummy
 	ip link set ${port_name} up
-	exec_log "ovs-vsctl add-port ${ovs_br} ${port_name}"
+	exec_log "ovs_cmd add-port ${ovs_br} ${port_name}"
 }
 
 ovs_dpdk_docker() {
 
-        echo "ovs_dpdk_docker"
-        set +x
-        local remote_dir="/"
+	echo "ovs_dpdk_docker"
+	set +x
+	local remote_dir="/"
 ##################
 local ovs_docker_cmd="/tmp/${DOCKER_INST}/ovs-docker $@"
 local remote_script="\
@@ -41,8 +41,8 @@ mv -f /tmp/${DOCKER_INST}/ovs-vsctl.backup /usr/local/bin/ovs-vsctl;\
 "
 local remote_cmd="echo \"${remote_script}\" > /tmp/${DOCKER_INST}/exec_cmd.sh; chmod +x /tmp/${DOCKER_INST}/exec_cmd.sh; /tmp/${DOCKER_INST}/exec_cmd.sh"
 ##################
-        exec_tgt "${remote_dir}" "${remote_cmd}"
-        set +x
+	exec_tgt "${remote_dir}" "${remote_cmd}"
+	set +x
 }
 
 ovs_dpdk_add_dpdk_port() {
@@ -51,7 +51,7 @@ ovs_dpdk_add_dpdk_port() {
 	local port_name=$2
 	local pci_addr=$3
 	
-	exec_log "ovs-vsctl add-port ${ovs_br} ${port_name} -- set Interface ${port_name} type=dpdk options:dpdk-devargs=${pci_addr}"
+	exec_log "ovs_cmd add-port ${ovs_br} ${port_name} -- set Interface ${port_name} type=dpdk options:dpdk-devargs=${pci_addr}"
 }
 
 ovs_dpdk_add_flow() {
@@ -89,7 +89,7 @@ ovs_dpdk() {
 		ovs_dpdk_add_flow $@
 		;;
 		*)
-		exec_log "ovs-vsctl ${cmd} $@"
+		exec_log "ovs_cmd ${cmd} $@"
 		;;
 	esac
 }

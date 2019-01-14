@@ -36,7 +36,8 @@ docker run \
 	--privileged \
 	-v /mnt/huge:/mnt/huge \
 	--device=/dev/uio0:/dev/uio0 \
-	--name=$DOCKER_INST \
 	--env DOCKER_INST=$DOCKER_INST \
+	--hostname=$DOCKER_INST \
+	--name=$DOCKER_INST \
 	$IMG_TAG \
 	/bin/bash

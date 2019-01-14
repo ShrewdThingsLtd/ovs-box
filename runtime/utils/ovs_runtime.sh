@@ -2,13 +2,39 @@
 
 set +x
 
+ovs_cmd_create() {
+
+local orig_ovs_dir=/usr/local/bin/ovs
+printf '
+#!/bin/bash\n
+ovs_exec="%s/ovs-vsctl %s --db=unix:%s ${@}"\n
+eval "${ovs_exec}"\n' \
+	${orig_ovs_dir} \
+	"${OVS_MODIFIERS}" \
+	"${OVS_RUNTIME_DIR}/db.sock" \
+	> /usr/local/bin/ovs_cmd
+chmod +x /usr/local/bin/ovs_cmd
+mkdir -p ${orig_ovs_dir}
+mv -f /usr/local/bin/ovs-vsctl ${orig_ovs_dir}/ovs-vsctl
+cp -f /usr/local/bin/ovs_cmd /usr/local/bin/ovs-vsctl
+}
+
+ovs_vsctl_remote_create() {
+
+printf '
+#!/bin/bash\n
+docker exec %s ovs_cmd $@\n' \
+	${DOCKER_INST} \
+	> /usr/local/bin/ovs-vsctl-remote.sh
+chmod +x /usr/local/bin/ovs-vsctl-remote.sh
+}
+
 ovs_mount_hugepages() {
 
 	sysctl -w vm.nr_hugepages=$OVS_2M_HUGEPAGES
 	mkdir -p /mnt/huge
 	#mount -t hugetlbfs -o pagesize=1G nodev /mnt/huge
 	mount -t hugetlbfs nodev /mnt/huge
-	grep HugePages_ /proc/meminfo
 }
 
 ovsdb_reset() {
@@ -17,14 +43,9 @@ ovsdb_reset() {
 	mkdir -p $OVS_LOG_DIR
 	mkdir -p $OVS_RUNTIME_DIR
 	rm -f $OVS_ETC_DIR/conf.db
-	ovsdb-tool create $OVS_ETC_DIR/conf.db $OVS_SHARE_DIR/vswitch.ovsschema
-	ovs-vsctl --no-wait init
-}
-
-ovs_cmd() {
-
-	local ovs_exec="ovs-vsctl $OVS_MODIFIERS ${@:1}"
-	eval "${ovs_exec}"
+	ovsdb-tool \
+		create $OVS_ETC_DIR/conf.db $OVS_SHARE_DIR/vswitch.ovsschema
+	ovs_cmd --no-wait init
 }
 
 ovs_clear_br() {
@@ -91,40 +112,37 @@ ovs_wipeout() {
 ovsdb_server_start() {
 
 	ovsdb-server \
+		--log-file -v \
 		--remote=punix:$OVS_RUNTIME_DIR/db.sock \
 		--remote=db:Open_vSwitch,Open_vSwitch,manager_options \
-		--pidfile --detach --log-file
-	ovs-vsctl --no-wait set Open_vSwitch . other_config:dpdk-init=true
+		--pidfile=$OVS_RUNTIME_DIR/ovsdb-server.pid --detach
+	ovs_cmd  --no-wait set Open_vSwitch . external_ids:hostname=${DOCKER_INST}.inst
+	ovs_cmd --no-wait set Open_vSwitch . other_config:dpdk-init=true
 }
 
 ovs_restart() {
 
 	ovs-ctl --no-ovsdb-server --db-sock="$OVS_RUNTIME_DIR/db.sock" restart
-	ovs-vsctl get Open_vSwitch . dpdk_initialized
-	ovs-vswitchd --version
-	ovs-vsctl get Open_vSwitch . dpdk_version
+	ovs_cmd get Open_vSwitch . dpdk_initialized
+	ovs-vswitchd \
+		--pidfile=$OVS_RUNTIME_DIR/ovs-vswitchd.pid \
+		--log-file -v \
+		--version
+	ovs_cmd get Open_vSwitch . dpdk_version
 	ovs-ctl status
-}
-
-ovs_vsctl_remote_create() {
-
-printf '
-#!/bin/bash\n
-docker exec %s ovs-vsctl $@\n' \
-        ${DOCKER_INST} \
-        > /usr/local/bin/ovs-vsctl-remote.sh
-chmod +x /usr/local/bin/ovs-vsctl-remote.sh
 }
 
 ovs_run() {
 
-	dpdk_remote_install
-	exec_tgt "/" "modprobe openvswitch"
-	ovs_wipeout
+	ovs_cmd_create
+	ovs_vsctl_remote_create
+	#dpdk_remote_install
 	ovs_mount_hugepages
+	grep HugePages_ /proc/meminfo
+	ovsdb_reset
+	exec_tgt "/" "modprobe openvswitch"
 	ovsdb_server_start
 	ovs_restart
-	ovs_vsctl_remote_create
 }
 
 set +x
