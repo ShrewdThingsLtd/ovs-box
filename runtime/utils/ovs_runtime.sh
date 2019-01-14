@@ -23,7 +23,8 @@ ovs_vsctl_remote_create() {
 
 printf '
 #!/bin/bash\n
-docker exec %s ovs_cmd $@\n' \
+exec_cmd="docker exec %s /bin/bash -c \"ovs_cmd $@\""\n
+eval "${exec_cmd}"\n' \
 	${DOCKER_INST} \
 	> /usr/local/bin/ovs-vsctl-remote.sh
 chmod +x /usr/local/bin/ovs-vsctl-remote.sh
