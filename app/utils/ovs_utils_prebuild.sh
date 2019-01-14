@@ -29,7 +29,7 @@ ovs_build() {
 	cd "${OVS_DIR}"
 	./boot.sh
 	./configure --with-dpdk=${DPDK_DIR}/${DPDK_TARGET}
-	make install CFLAGS='-O3 -march=native'
+	make -j20 install CFLAGS='-O3 -march=native'
 	#make clean
 	cd -
 }
