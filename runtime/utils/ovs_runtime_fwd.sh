@@ -1,10 +1,17 @@
 #!/bin/bash
 
-ovs_dpdk_add_br() {
+ovs_dpdk_add_dpdk_br() {
 
 	local ovs_br=$1
 	
 	exec_log "ovs_cmd add-br ${ovs_br} -- set bridge ${ovs_br} datapath_type=netdev"
+}
+
+ovs_dpdk_add_br() {
+
+	local ovs_br=$1
+	
+	exec_log "ovs_cmd add-br ${ovs_br}"
 }
 
 ovs_dpdk_add_dummy_port() {
@@ -17,6 +24,31 @@ ovs_dpdk_add_dummy_port() {
 	ip link add ${port_name} type dummy
 	ip link set ${port_name} up
 	exec_log "ovs_cmd add-port ${ovs_br} ${port_name}"
+}
+
+ovs_dpdk_set_port_id() {
+
+	set +x
+	local dev_name=$1
+	local port_id=$2
+
+	ovs_cmd set interface ${dev_name} ofport_request=${port_id}
+	set +x
+}
+
+ovs_dpdk_docker_set_port_id() {
+
+	set +x
+	local container_name=$1
+	local container_dev_name=$2
+	local port_id=$3
+
+	local container_ifidx=$(exec_tgt '/' "docker exec ${container_name} cat /sys/class/net/${container_dev_name}/iflink")
+	container_ifidx=$(grep -oh "[0-9]*" <<< ${container_ifidx})
+	local host_ifidx=$((container_ifidx - 1))
+	local docker_peer_dev=$(grep ${host_ifidx} /sys/class/net/*/iflink | sed "s~/sys/class/net/\(.*\)/iflink\:[0-9]*$~\1~")
+	ovs_cmd set interface ${docker_peer_dev} ofport_request=${port_id}
+	set +x
 }
 
 ovs_dpdk_docker() {
@@ -54,6 +86,14 @@ ovs_dpdk_add_dpdk_port() {
 	exec_log "ovs_cmd add-port ${ovs_br} ${port_name} -- set Interface ${port_name} type=dpdk options:dpdk-devargs=${pci_addr}"
 }
 
+ovs_dpdk_add_port() {
+
+	local ovs_br=$1
+	local port_name=$2
+	
+	exec_log "ovs_cmd add-port ${ovs_br} ${port_name}"
+}
+
 ovs_dpdk_add_flow() {
 
 	local ovs_br=$1
@@ -70,6 +110,9 @@ ovs_dpdk() {
 	shift
 
 	case ${cmd} in
+		'add-dpdk-br')
+		ovs_dpdk_add_dpdk_br $@
+		;;
 		'add-br')
 		ovs_dpdk_add_br $@
 		;;
@@ -82,8 +125,17 @@ ovs_dpdk() {
 		'add-docker-port')
 		ovs_dpdk_docker add-port $@
 		;;
+		'set-port-id')
+		ovs_dpdk_set_port_id $@
+		;;
+		'set-docker-port-id')
+		ovs_dpdk_docker_set_port_id $@
+		;;
 		'add-dpdk-port')
 		ovs_dpdk_add_dpdk_port $@
+		;;
+		'add-port')
+		ovs_dpdk_add_port $@
 		;;
 		'add-flow')
 		ovs_dpdk_add_flow $@
