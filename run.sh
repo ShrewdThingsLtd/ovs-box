@@ -1,9 +1,9 @@
 #!/bin/bash
 
-IMG_DOMAIN=${1:-local}
-DPDK_VERSION=${2:-v17.11-rc4}
-OVS_VERSION=${3:-v2.10.1}
-DOCKER_INST=${4:-ovs-box}
+DOCKER_INST=${1:-ovs-box}
+IMG_DOMAIN=${2:-local}
+DPDK_VERSION=${3:-v17.11-rc4}
+OVS_VERSION=${4:-v2.10.1}
 
 docker volume rm $(docker volume ls -qf dangling=true)
 #docker network rm $(docker network ls | grep "bridge" | awk '/ / { print $1 }')
@@ -31,7 +31,9 @@ esac
 docker kill $DOCKER_INST
 docker rm $DOCKER_INST
 docker run \
-	-ti \
+	-t \
+	-d \
+	--rm \
 	--net=host \
 	--privileged \
 	-v /mnt/huge:/mnt/huge \
