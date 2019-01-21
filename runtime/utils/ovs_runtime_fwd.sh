@@ -44,7 +44,7 @@ ovs_dpdk_docker_set_port_id() {
 	local port_id=$3
 
 	local container_ifidx=$(exec_tgt '/' "docker exec ${container_name} cat /sys/class/net/${container_dev_name}/iflink")
-	container_ifidx=$(grep -oh "[0-9]*" <<< ${container_ifidx})
+	#container_ifidx=$(grep -oh "[0-9]*" <<< ${container_ifidx})
 	local host_ifidx=$((container_ifidx - 1))
 	local docker_peer_dev=$(grep ${host_ifidx} /sys/class/net/*/iflink | sed "s~/sys/class/net/\(.*\)/iflink\:[0-9]*$~\1~")
 	ovs_cmd set interface ${docker_peer_dev} ofport_request=${port_id}
@@ -124,6 +124,9 @@ ovs_dpdk() {
 		;;
 		'add-docker-port')
 		ovs_dpdk_docker add-port $@
+		;;
+		'del-docker-port')
+		ovs_dpdk_docker del-port $@
 		;;
 		'set-port-id')
 		ovs_dpdk_set_port_id $@
