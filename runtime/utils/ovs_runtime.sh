@@ -110,6 +110,16 @@ ovs_wipeout() {
 	ovsdb_reset
 }
 
+ovsdb_server_kernel_start() {
+
+	ovsdb-server \
+		--log-file -v \
+		--remote=punix:$OVS_RUNTIME_DIR/db.sock \
+		--remote=db:Open_vSwitch,Open_vSwitch,manager_options \
+		--pidfile=$OVS_RUNTIME_DIR/ovsdb-server.pid --detach
+	ovs_cmd  --no-wait set Open_vSwitch . external_ids:hostname=${DOCKER_INST}.inst
+}
+
 ovsdb_server_start() {
 
 	ovsdb-server \
@@ -119,6 +129,16 @@ ovsdb_server_start() {
 		--pidfile=$OVS_RUNTIME_DIR/ovsdb-server.pid --detach
 	ovs_cmd  --no-wait set Open_vSwitch . external_ids:hostname=${DOCKER_INST}.inst
 	ovs_cmd --no-wait set Open_vSwitch . other_config:dpdk-init=true
+}
+
+ovs_kernel_restart() {
+
+	ovs-ctl --no-ovsdb-server --db-sock="$OVS_RUNTIME_DIR/db.sock" restart
+	ovs-vswitchd \
+		--pidfile=$OVS_RUNTIME_DIR/ovs-vswitchd.pid \
+		--log-file -v \
+		--version
+	ovs-ctl status
 }
 
 ovs_restart() {
