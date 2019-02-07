@@ -4,19 +4,21 @@ set +x
 
 ovs_cmd_create() {
 
-local orig_ovs_dir=/usr/local/bin/ovs
+local ovs_install_dir=/usr/local/bin
+local ovs_backup_dir=/usr/local/bin/backup
+local ovs_build_dir=/usr/src/ovs/utilities
 printf '
 #!/bin/bash\n
 ovs_exec="%s/ovs-vsctl %s --db=unix:%s ${@}"\n
 eval "${ovs_exec}"\n' \
-	${orig_ovs_dir} \
+	${ovs_build_dir} \
 	"${OVS_MODIFIERS}" \
 	"${OVS_RUNTIME_DIR}/db.sock" \
 	> /usr/local/bin/ovs_cmd
 chmod +x /usr/local/bin/ovs_cmd
-mkdir -p ${orig_ovs_dir}
-mv -f /usr/local/bin/ovs-vsctl ${orig_ovs_dir}/ovs-vsctl
-cp -f /usr/local/bin/ovs_cmd /usr/local/bin/ovs-vsctl
+mkdir -p ${ovs_backup_dir}
+mv -f ${ovs_install_dir}/ovs-vsctl ${ovs_backup_dir}/ovs-vsctl
+cp -f ${ovs_install_dir}/ovs_cmd ${ovs_install_dir}/ovs-vsctl
 }
 
 ovs_vsctl_remote_create() {
