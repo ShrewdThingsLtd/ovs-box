@@ -28,17 +28,17 @@ ovs_dpdk_add_dummy_port() {
 
 ovs_dpdk_set_port_id() {
 
-	set +x
+	#set -x
 	local dev_name=$1
 	local port_id=$2
 
 	ovs_cmd set interface ${dev_name} ofport_request=${port_id}
-	set +x
+	#set +x
 }
 
 ovs_dpdk_docker_set_port_id() {
 
-	set +x
+	#set -x
 	local container_name=$1
 	local container_dev_name=$2
 	local port_id=$3
@@ -48,13 +48,13 @@ ovs_dpdk_docker_set_port_id() {
 	local host_ifidx=$((container_ifidx - 1))
 	local docker_peer_dev=$(grep ${host_ifidx} /sys/class/net/*/iflink | sed "s~/sys/class/net/\(.*\)/iflink\:[0-9]*$~\1~")
 	ovs_cmd set interface ${docker_peer_dev} ofport_request=${port_id}
-	set +x
+	#set +x
 }
 
 ovs_dpdk_docker() {
 
 	echo "ovs_dpdk_docker"
-	set +x
+	#set -x
 	local remote_dir="/"
 ##################
 local ovs_docker_cmd="/tmp/${DOCKER_INST}/ovs-docker $@"
@@ -74,7 +74,7 @@ mv -f /tmp/${DOCKER_INST}/ovs-vsctl.backup /usr/local/bin/ovs-vsctl;\
 local remote_cmd="echo \"${remote_script}\" > /tmp/${DOCKER_INST}/exec_cmd.sh; chmod +x /tmp/${DOCKER_INST}/exec_cmd.sh; /tmp/${DOCKER_INST}/exec_cmd.sh"
 ##################
 	exec_tgt "${remote_dir}" "${remote_cmd}"
-	set +x
+	#set +x
 }
 
 ovs_dpdk_add_dpdk_port() {

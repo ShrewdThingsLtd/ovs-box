@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set +x
+#set -x
 
 ovs_prerequisites() {
 
@@ -41,5 +41,5 @@ dpdk_configure() {
 	ovs_dpdk_config
 }
 
-set +x
+#set +x
 

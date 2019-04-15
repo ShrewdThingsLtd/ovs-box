@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set +x
+#set -x
 
 ovs_cmd_create() {
 
@@ -168,4 +168,4 @@ ovs_run() {
 	ovs_restart
 }
 
-set +x
+#set +x
